@@ -1,3 +1,4 @@
+from subprocess import run
 from typing import Union
 from aiogram.types import BotCommand, FSInputFile, Message, BotCommandScopeDefault
 from aiogram.filters import Command
@@ -69,11 +70,11 @@ class CrowlerBot:
 
     async def setup_bot_commands(self, bot: Bot):
         users_commands = {
-            "start": "Get info about bot",
-            "scrap": "Start scraping domains",
-            "health": "Check healt",
-            "export": "Export last result"}
-
+            "start": "🤖 Get information about the bot",
+            "scrap": "🌐 Start scraping domains",
+            "health": "❤️ Check the bot's health",
+            "export": "📦 Export the latest results",
+        }
         await bot.set_my_commands(
             [
                 BotCommand(command=command, description=description)
@@ -101,34 +102,49 @@ class CrowlerBot:
             logging.error("Bot stopped")
 
     async def start_cmd(self, message: Message):
-        msg_text = f"Hi {message.chat.first_name} i'm crowler bot\nTo start scraping send /scrap command\nTo export last result send /export\nTo check health send /health command"
-        await message.answer(text=msg_text)
+        try:
+            msg_text = f"👋 Hi, {message.chat.first_name}! I'm your friendly Crowler Bot.\n\n"
+            msg_text += "Here's what I can do for you:\n"
+            msg_text += "▶️ To start scraping, simply send the /scrap command.\n"
+            msg_text += "📤 To export the latest results, use the /export command.\n"
+            msg_text += "💉 To check my health and see if I'm currently working, send the /health command.\n"
+        
+            await message.answer(text=msg_text)
+        except Exception as e:
+            logging.error(e)
 
     async def scrap_cmd(self, message: Message):
-        self._config.waiters_set.add(message.chat.id)
-        if not self._crowler.running:
-            msg_text = "I start to scrap to check my work status send /health"
-            await self._crowler.run(self._bot)
-        else:
-            msg_text = f"I'm already scrapping results now {len(self._crowler.__links)}"
-        await message.answer(msg_text)
+        try:
+            self._config.waiters_set.add(message.chat.id)
+            if not self._crowler.running:
+                msg_text = "🛠️ I've started scraping! To check my work status and see how many results I've collected, send /health."
+                asyncio.create_task(self._crowler.run(self._bot))
+            else:
+                msg_text = f"🔄 I'm already hard at work! I'm currently scraping results from {len(self._crowler._links)} sources. Keep an eye out for the latest data!"
+            await message.answer(msg_text)
+        except Exception as e:
+            logging.error(e)
 
     async def health_cmd(self, message: Message):
-        self._config.waiters_set.add(message.chat.id)
-        if self._crowler.running:
-            msg_text = f"I'm steel scrapping results now {len(self._crowler.__links)}"
-        else:
-            msg_text = "I'm not scrapping now"
-        await message.answer(text=msg_text)
+        try:
+            self._config.waiters_set.add(message.chat.id)
+            if self._crowler.running:
+                msg_text = f"⚙️ I'm still in the midst of scraping! Currently, I'm processing results from {len(self._crowler._links)} sources. Stay tuned for the latest updates!"
+
+            else:
+                msg_text = "I'm not scrapping now"
+            await message.answer(text=msg_text)
+        except Exception as e:
+            logging.error(e)
 
     async def export_cmd(self, message: Message):
-        latest_file = get_latest_file(self._config.local.download_dir)
-        print(latest_file)
-        if latest_file:
-            file_path = os.path.join(self._config.local.download_dir, latest_file)
-            print(file_path)
-            file = FSInputFile(file_path)
-            print(2)
-            await message.answer_document(document=file, caption="Here is latest results")
-        else:
-            await message.answer("Sorry i have no file to send\nTry /scrap")
+        try:
+            latest_file = get_latest_file(self._config.local.download_dir)
+            if latest_file:
+                file_path = os.path.join(self._config.local.download_dir, latest_file)
+                file = FSInputFile(file_path)
+                await message.answer_document(document=file, caption="Here is latest results")
+            else:
+                await message.answer("Sorry i have no file to send\nTry /scrap")
+        except Exception as e:
+            logging.error(e)

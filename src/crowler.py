@@ -1,6 +1,7 @@
+from os import stat
 import time
 from typing import Any, List, Union
-
+from aiogram.types import FSInputFile
 from aiogram import Bot
 from config import Config
 import undetected_chromedriver as uc
@@ -23,8 +24,8 @@ def extract_domain(url):
 class Crowler:
     def __init__(self, config: Config, allow_options: bool = True) -> None:
         self._config = config
-        # self.__init_driver(allow_options)
-        self.__links = set()
+        self.__init_driver(allow_options)
+        self._links = set()
         self.running = False
 
     def __init_driver(self, allow_options: bool) -> None:
@@ -94,55 +95,44 @@ class Crowler:
                         pass
                 for a in a_links:
                     if "hubspot.com" not in a['href'].lower() and a['href'].startswith("https:"):
-                        self.__links.add(extract_domain(a['href']))
+                        self._links.add(extract_domain(a['href']))
         except Exception as e:
-            time.sleep(40)
-            print("129: ", e)
+            print("99",e)
 
     async def __async_get(self, url):
+        await asyncio.sleep(1)
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 html = await response.text()
                 status = response.status
                 return html, status
 
-    def __get_blog_articles(self):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.__async_get_blog_articles())
-
-    async def __async_get_blog_articles(self):
+    async def __async_get_blog_articles(self, url):
         try:
-            art_els = self.__driver.find_element(
-                uc.By.XPATH,
-                self._config.xpath.blog_articles
-            )
-            html = bs(art_els.get_attribute("innerHTML"), "html.parser")
-            na = html.find_all("li")
+            page_source, status = await self.__async_get(url)
+            await asyncio.sleep(2)
+            print(status)
+            if status != 200:
+                return None
+            html = bs(page_source, "html.parser")
+            blog_post_list = html.find("ul", {'class': 'blog-post-list'}) 
+            na = blog_post_list.find_all("li")
             article_links = [i.find('a', href=True).get('href') for i in na]
             tasks = [self.__get_single_article_links(article) for article in article_links]
             await asyncio.gather(*tasks)
-            print(len(self.__links))
+            print(len(self._links))
         except Exception as e:
-            print("155: ", e)
+            print("121", e)
 
-    def __scrap_articles(self, categoies: List[str]) -> None:
+    async def __scrap_articles(self, categoies: List[str]) -> None:
         try:
             for category in categoies:
-                self.__get_page(category)
-                time.sleep(1)
-                first_button = self.__driver.find_element(
-                    uc.By.XPATH,
-                    self._config.xpath.first_button
-                )
-                first_button.click()
-                for i in range(5):
-                    self.__get_blog_articles()
+                for i in range(1, 30):
                     try:
-                        self.__driver.find_element(
-                            uc.By.XPATH,
-                            self._config.xpath.blog_article_next).click()
-                    except NoSuchElementException:
-                        break
+                        print(category+str(i))
+                        await self.__async_get_blog_articles(category+str(i))
+                    except Exception as e:
+                        print(e)
         except Exception as e:
             print(repr(e))
 
@@ -171,7 +161,8 @@ class Crowler:
     async def send_csv_to_waiters(self, bot: Union[Bot, None], file_path: Union[str, None]):
         if bot and file_path:
             for i in self._config.waiters_set:
-                await bot.send_document(i, file_path)
+                file = FSInputFile(file_path)
+                await bot.send_document(i, file)
 
     async def run(self, bot: Union[Bot, None]) -> Union[bool, None]:
         try:
@@ -180,16 +171,17 @@ class Crowler:
             # self.__get_page_main()
             # blog_pages = self.__get_blog_page_categories()
             blog_pages = [
+                    "https://blog.hubspot.com/ai/page/",
                     "https://blog.hubspot.com/marketing/page/",
                     "https://blog.hubspot.com/sales/page/",
                     "https://blog.hubspot.com/service/page/",
                     "https://blog.hubspot.com/website/page/",
                     "https://blog.hubspot.com/the-hustle/page/",
-                    "https://blog.hubspot.com/ai/page/"
+                    
                     ]
             if blog_pages:
-                self.__scrap_articles(blog_pages)
-                articles = list(self.__links)
+                await self.__scrap_articles(blog_pages)
+                articles = list(self._links)
                 df = pd.DataFrame({'urls': articles})
                 file_path = self.save_file(df)
                 await self.send_csv_to_waiters(bot, file_path)
