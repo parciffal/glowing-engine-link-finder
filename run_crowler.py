@@ -7,6 +7,29 @@ import pandas as pd
 import undetected_chromedriver as uc
 
 
+def get_latest_file(dir: str = "data\\") -> Union[str, None]:
+    files = [f for f in os.listdir("data")]
+
+    if not files:
+        return None
+    latest_file = None
+    latest_date = None
+
+    for file in files:
+        try:
+            file_date = datetime.strptime(file[13:-4], "%Y-%m-%d_%H-%M-%S")
+            if not latest_date:
+                latest_date = file_date
+                latest_file = file
+            if file_date > latest_date:
+                latest_date = file_date
+                latest_file = file
+        except Exception as e:
+            logging.error(e)
+
+    return latest_file
+
+
 def __init_driver(allow_options: bool = True):
     if allow_options:
         options = __init_options()
@@ -41,22 +64,23 @@ def run_uni_crowler(file_path: str):
         # Accessing columns by name
         url = row['urls']
         checked = row['checked']
+        print(url, checked)
         if not checked:
             time.sleep(5)
+            print(2)
             try:
                 crowler = UnifiedCrowler(
-                    config, f"https://{url}", url, exclude, driver)
+                    config=config, 
+                    url=f"https://{url}", 
+                    domain=url, 
+                    exclued=exclude, 
+                    driver=driver, 
+                    file_dir=file_path)
                 crowler.run()
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
 
-
-async def main():
-    #crowler = Crowler(config)
-    file_path = await crowler.run()
-    if file_path:
-        run_uni_crowler(file_path)
-
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    file_dir = get_latest_file()
+    run_uni_crowler(file_dir)
