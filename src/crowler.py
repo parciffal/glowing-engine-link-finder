@@ -4,7 +4,6 @@ from aiogram import Bot
 from config import Config
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup as bs
-import requests as re
 import pandas as pd
 from urllib.parse import urlparse
 import asyncio
@@ -113,15 +112,18 @@ class Crowler:
         except PageNotFounfException:
             return None
         except Exception as e:
-            print("99", e)
+            print(e)
 
     async def __async_get(self, url):
-        await asyncio.sleep(1)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                html = await response.text()
-                status = response.status
-                return html, status
+        try:
+            await asyncio.sleep(1)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    html = await response.text()
+                    status = response.status
+                    return html, status
+        except Exception:
+            return "", 404
 
     async def __async_get_blog_articles(self, url):
         try:
@@ -140,7 +142,7 @@ class Crowler:
         except PageNotFounfException:
             return None
         except Exception as e:
-            print("121", e)
+            print(e)
 
     async def __scrap_articles(self, categoies: List[str]) -> None:
         try:
@@ -154,34 +156,42 @@ class Crowler:
                     except Exception as e:
                         print(e)
         except Exception as e:
-            print(repr(e))
+            print(e)
 
-    def save_file(self, df: pd.DataFrame):
-        current_datetime = datetime.now()
-        formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
-        cleaned_csv_file_path = f'./data/cleaned_urls_{formatted_datetime}.csv'
-        def remove_www(url):
-            if url.startswith("www."):
-                return url[4:]
-            return url
+    def save_file(self, df: pd.DataFrame) -> Union[str, None]:
+        try:
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+            cleaned_csv_file_path = f'./data/cleaned_urls_{formatted_datetime}.csv'
+            def remove_www(url):
+                if url.startswith("www."):
+                    return url[4:]
+                return url
 
-        def clean_subdomains_from_url(url):
-            pattern = r'(?:\w+\.)?([\w-]+\.\w+)'
-            cleaned_url = rgs.sub(
-                pattern, r'\1', url)
-            return cleaned_url
+            def clean_subdomains_from_url(url):
+                pattern = r'(?:\w+\.)?([\w-]+\.\w+)'
+                cleaned_url = rgs.sub(
+                    pattern, r'\1', url)
+                return cleaned_url
 
-        df['urls'] = df['urls'].apply(remove_www)
-        df['urls'] = df['urls'].apply(clean_subdomains_from_url)
-        df = df.drop_duplicates() 
-        df.to_csv(cleaned_csv_file_path, index=False)
-        return cleaned_csv_file_path
+            df['urls'] = df['urls'].apply(remove_www)
+            df['urls'] = df['urls'].apply(clean_subdomains_from_url)
+
+            df = df.drop_duplicates()
+            df.to_csv(cleaned_csv_file_path, index=False)
+            return cleaned_csv_file_path
+        except Exception as e:
+            print(e)
+            return None
 
     async def send_csv_to_waiters(self, bot: Union[Bot, None], file_path: Union[str, None]):
-        if bot and file_path:
-            for i in self._config.waiters_set:
-                file = FSInputFile(file_path)
-                await bot.send_document(i, file)
+        try:
+            if bot and file_path:
+                for i in self._config.waiters_set:
+                    file = FSInputFile(file_path)
+                    await bot.send_document(i, file)
+        except Exception as e:
+            print(e)
 
     async def run(self, bot: Union[Bot, None]) -> Union[bool, None]:
         try:
