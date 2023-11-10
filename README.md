@@ -1,37 +1,35 @@
-# LinkedIn Automation Script
+# Crowler Scraper Bot
 
-This Python script automates interactions on LinkedIn, such as downloading data archives, for multiple LinkedIn accounts provided in a CSV file. You can also specify a custom download directory for saving the downloaded files.
+## Overview
+
+Crowler is a scraper bot designed to scrap domain from websites.
 
 ## Prerequisites
 
-- Python 3.x
-- Required Python packages (install using `pip`):
+- Python 3.11 installed on your system.
+- Download chromedriver.exe for your Chrome version
+- Follow up the instructions above
 
-## Command
+## Installation
+
+To install the dependencies for Crowler, run the following command in the terminal or command prompt:
+
 ```bash
-python3.x -m pip install requirements.txt
+install.bat
 ```
-## Setup
 
-1. Clone this repository to your local machine.
+## To run Crowler
 
-2. Create a CSV file named `credentials.csv` with two columns: `email` and `password`, containing the LinkedIn account credentials you want to use for automation. If you want to specify a different CSV file, you can do so using the `--csv_file` command-line argument (see "Usage" below).
-
-3. Setup download path if needed in config.py by default it's /data . If you want to specify a different download path, you can do so using the `--download_path` command-line argument (see "Usage" below).
-
-4. Download the ChromeDriver executable suitable for your system and place it in the project folder. Make sure it matches your Google Chrome version.
-
-5. Modify the `config.py` file to specify the XPath configurations and any other necessary settings for LinkedIn automation.
-
-## Usage
-
-To run the script, open a terminal and navigate to the project directory. Use the following command:
+To run crowler use following command in the terminal or command prompt:
 
 ```bash
-python main.py --csv_file=/path/to/your/csv/file.csv --download_path=/path/to/your/download/directory
+run.bat
 ```
-Or this command if you have set path's in config.py
+
+## To install and run Crowler
+
+To install dependencies for Crowler and run it in one command use the following command in the terminal or command prompt:
 
 ```bash
-python main.py
+crowler.bat
 ```
