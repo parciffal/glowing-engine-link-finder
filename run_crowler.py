@@ -1,13 +1,13 @@
-from undetected_chromedriver.reactor import asyncio
-from src.crowler import Crowler
 from src.unified_crowler import UnifiedCrowler
 from config import config
 import time
 import pandas as pd
 import undetected_chromedriver as uc
+import os
+from datetime import datetime
 
 
-def get_latest_file(dir: str = "data\\") -> Union[str, None]:
+def get_latest_file():
     files = [f for f in os.listdir("data")]
 
     if not files:
@@ -25,9 +25,10 @@ def get_latest_file(dir: str = "data\\") -> Union[str, None]:
                 latest_date = file_date
                 latest_file = file
         except Exception as e:
-            logging.error(e)
-
-    return latest_file
+            print(e)
+    if latest_file:
+        path = os.path.join("data", latest_file)
+        return path
 
 
 def __init_driver(allow_options: bool = True):
@@ -52,35 +53,37 @@ def __init_options() -> uc.ChromeOptions:
 
 
 def run_uni_crowler(file_path: str):
-    exclude = [
-        "youtube", "instagram", "twitter", "youtube", "facebook",
-        "threads", "google", "bing", "yahoo", "yandex", "tiktok",
-        "slack", "microsoft", "cisco", "gitlab", "github", "amazone",
-        "youtu", "coca-cola", "canon", "graphql"
-        ]
+    print(file_path)
+    exclude = pd.read_csv("./excluded.csv", index_col=False)
+    exclude = list(exclude['excluded'])
     df = pd.read_csv(file_path)
+    used_urls_df = pd.read_csv("./no_domains.csv")
+    # Filter new URLs that are not in the used URLs
+    filtered_df = df[~df['urls'].isin(used_urls_df['urls'])]
+    filtered_df.to_csv(file_path, index=False)
     driver = __init_driver()
-    for index, row in df.iterrows():
-        # Accessing columns by name
+    for index, row in filtered_df.iterrows():
         url = row['urls']
         checked = row['checked']
-        print(url, checked)
         if not checked:
-            time.sleep(5)
-            print(2)
+            time.sleep(1)
             try:
                 crowler = UnifiedCrowler(
-                    config=config, 
-                    url=f"https://{url}", 
-                    domain=url, 
-                    exclued=exclude, 
-                    driver=driver, 
+                    config=config,
+                    url=f"https://{url}",
+                    domain=url,
+                    exclued=exclude,
+                    driver=driver,
                     file_dir=file_path)
                 crowler.run()
             except Exception as e:
                 print(e)
                 continue
 
+
 if __name__ == "__main__":
     file_dir = get_latest_file()
-    run_uni_crowler(file_dir)
+    if file_dir:
+        run_uni_crowler(file_dir)
+    else:
+        print("Check Files")

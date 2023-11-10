@@ -1,11 +1,7 @@
-from os import link
 import time
-from typing import Any, List, Set, Union
-from pprint import pprint
+from typing import List, Set, Union
 from aiogram import Bot
-from config import Config
 import undetected_chromedriver as uc
-from selenium.common.exceptions import NoSuchElementException
 from bs4 import BeautifulSoup as bs
 import requests as re
 import pandas as pd
@@ -14,6 +10,7 @@ import re as rgs
 from datetime import datetime
 
 from src.utils.url_queue import URLQueue
+from config import Config
 
 
 def extract_domain(url):
@@ -32,13 +29,13 @@ class UnifiedCrowler:
                  file_dir: str = "./data/cleaned_urls.csv") -> None:
         self._config = config
         self.__url = url
-        self.__domain = domain
+        self.__domain = domain.split(".")[0]
         # self.__init_driver(allow_options)
         self.__driver = driver
         self._home_urls: Set[str] = set()
         self._current_links: Set[str] = set()
-        self._link_queue = URLQueue()
-        self.__exclued = exclued
+        self._link_queue = URLQueue(exclued)
+        self.__excluded = exclued
         self.running = False
         self.__file_dir = file_dir
         self.__outgoing_urls: Set[str] = set()
@@ -95,10 +92,7 @@ class UnifiedCrowler:
                 await bot.send_document(i, file_path)
 
     def check_excluded(self, url: str) -> bool:
-        for i in self.__exclued:
-            if i in url:
-                return False
-        return True
+        return not any(excluded_value in url for excluded_value in self.__excluded)
 
     def set_linked_in(self, linked_in_url: str) -> bool:
         df = pd.read_csv(self.__file_dir)
@@ -144,8 +138,6 @@ class UnifiedCrowler:
         next_link = self._link_queue.get()
         if not next_link:
             return self.set_url_checked()
-        if count > 500:
-            return self.set_url_checked()
         count += 1
         return self.get_all_urls_from_page(next_link, count)
 
@@ -161,7 +153,7 @@ class UnifiedCrowler:
             for a in self.__home_urls:
                 if not a :
                     continue
-                elif a in self.__domain or self.__domain in a or str(a).startswith("#") or not str(a).startswith("mailto") or "comment" not in str(a):
+                elif a in self.__domain or self.__domain in a or str(a).startswith("#"):
                     ingoing_urls.add(a)
             self._link_queue.add_from_set(ingoing_urls)
         blog_urls = [s for s in home_urls if search_term in s]
@@ -193,6 +185,7 @@ class UnifiedCrowler:
             # If the file doesn't exist, create an empty DataFrame
             existing_df = pd.DataFrame(columns=['urls', 'linked_in', 'checked'])
         # Create a new DataFrame for self.__outgoing_urls
+        print(self.__outgoing_urls)
         outgoing_df = pd.DataFrame({
             'urls': list(self.__outgoing_urls),
             'linked_in': '',
@@ -217,9 +210,12 @@ class UnifiedCrowler:
         # Concatenate existing and new DataFrames
         updated_df = pd.concat([existing_df, outgoing_df], ignore_index=True)
         updated_df = updated_df.drop_duplicates()
-        print(self.__domain, f" Cleaned Links: {len(updated_df)}")
+        used_urls_df = pd.read_csv("./no_domains.csv")
+        # Filter new URLs that are not in the used URLs
+        filtered_df = updated_df[~updated_df['urls'].isin(used_urls_df['urls'])]
+        print(self.__domain, f" Cleaned Links: {len(filtered_df)}")
         # Save the updated DataFrame back to the CSV file
-        updated_df.to_csv(file_dir, index=False)
+        filtered_df.to_csv(file_dir, index=False)
 
     def run(self) -> Union[bool, None]:
         self.running = True

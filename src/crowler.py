@@ -1,7 +1,4 @@
-from typing import List, Union
-from aiogram.types import FSInputFile
-from aiogram import Bot
-from config import Config
+from typing import Any, List, Union
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup as bs
 import pandas as pd
@@ -10,6 +7,8 @@ import asyncio
 import aiohttp
 import re as rgs
 from datetime import datetime
+
+from config import Config
 
 
 def extract_domain(url):
@@ -129,7 +128,6 @@ class Crowler:
         try:
             page_source, status = await self.__async_get(url)
             await asyncio.sleep(2)
-            print(status)
             if status != 200:
                 return None
             html = bs(page_source, "html.parser")
@@ -144,13 +142,13 @@ class Crowler:
         except Exception as e:
             print(e)
 
-    async def __scrap_articles(self, categoies: List[str]) -> None:
+    async def __scrap_articles(self, categoies: List[List[Any]]) -> None:
         try:
             for category in categoies:
-                for i in range(1, 30):
+                for i in range(1, category[1]):
                     try:
-                        print(category+str(i))
-                        await self.__async_get_blog_articles(category+str(i))
+                        print(category[0]+str(i))
+                        await self.__async_get_blog_articles(category[0]+str(i))
                     except PageNotFounfException:
                         break
                     except Exception as e:
@@ -188,13 +186,13 @@ class Crowler:
         try:
             self.running = True
             blog_pages = [
-                    "https://blog.hubspot.com/marketing/page/",
-                    "https://blog.hubspot.com/sales/page/",
-                    "https://blog.hubspot.com/service/page/",
-                    "https://blog.hubspot.com/website/page/",
-                    "https://blog.hubspot.com/the-hustle/page/",
-                    "https://blog.hubspot.com/ai/page/",
-                    ]
+                ["https://blog.hubspot.com/marketing/page/", 90],
+                ["https://blog.hubspot.com/sales/page/", 50],
+                ["https://blog.hubspot.com/service/page/", 30],
+                ["https://blog.hubspot.com/website/page/", 30],
+                ["https://blog.hubspot.com/the-hustle/page/", 10],
+                ["https://blog.hubspot.com/ai/page/", 5],
+            ]
             if blog_pages:
                 await self.__scrap_articles(blog_pages)
                 articles = list(self._links)

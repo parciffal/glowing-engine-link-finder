@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Union, Set
+from typing import List, Union, Set
 
 
 class URLQueue:
@@ -15,15 +15,16 @@ class URLQueue:
     Methods:
         add(url): Add a URL to the end of the queue.
         get(): Remove and return the URL from the front of the queue.
-                   Returns None if the queue is empty or count is greater than 500.
+                   Returns None if the queue is empty or count is greater than 100.
         is_empty(): Check if the queue is empty.
         add_from_set(urls_set): Add URLs from a set to the end of the queue.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, excluded: List[str]) -> None:
         """
         Initialize an empty URLQueue.
         """
+        self.excluded = excluded
         self.urls = deque()
         self.used_links = set()
         self.count = 0
@@ -35,7 +36,7 @@ class URLQueue:
         Parameters:
             url (str): The URL to be added to the queue.
         """
-        if "mailto" not in url:
+        if not any(excluded_value in url for excluded_value in self.excluded):
             self.urls.append(url)
 
     def get(self) -> Union[str, None]:
@@ -45,8 +46,9 @@ class URLQueue:
             str: The URL at the front of the queue.
             None: If the queue is empty or count is greater than 500.
         """
-        if self.urls and self.count < 500:
+        if self.urls and self.count < 100:
             self.count += 1
+            print(self.count)
             ret = self.urls.popleft()
             if ret not in self.used_links:
                 self.used_links.add(ret)

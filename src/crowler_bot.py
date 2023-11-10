@@ -1,10 +1,11 @@
-from typing import Union
 from aiogram.types import (BotCommand, FSInputFile,
                            Message, BotCommandScopeDefault)
 from aiogram.filters import Command
-from config import Config
 from aiogram import Bot, Dispatcher, Router
+import aiohttp
 import asyncio
+
+from typing import Union, List
 import os
 from datetime import datetime
 import logging
@@ -15,8 +16,9 @@ import undetected_chromedriver as uc
 from bs4 import BeautifulSoup as bs
 import pandas as pd
 from urllib.parse import urlparse
-import aiohttp
 import re as rgs
+
+from config import Config
 
 
 def extract_domain(url):

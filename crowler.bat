@@ -2,7 +2,7 @@
 
 run:
     echo Running the script...
-    python3.11.exe run_crowler.py
+    python3.11.exe src/run_crowler.py
 
     # Check if the script execution was successful
     if %errorlevel% neq 0 (
