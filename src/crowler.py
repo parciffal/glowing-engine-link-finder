@@ -184,16 +184,7 @@ class Crowler:
             print(e)
             return None
 
-    async def send_csv_to_waiters(self, bot: Union[Bot, None], file_path: Union[str, None]):
-        try:
-            if bot and file_path:
-                for i in self._config.waiters_set:
-                    file = FSInputFile(file_path)
-                    await bot.send_document(i, file)
-        except Exception as e:
-            print(e)
-
-    async def run(self, bot: Union[Bot, None]) -> Union[bool, None]:
+    async def run(self) -> Union[str, None]:
         try:
             self.running = True
             blog_pages = [
@@ -215,7 +206,7 @@ class Crowler:
                     }
                 )
                 file_path = self.save_file(df)
-                await self.send_csv_to_waiters(bot, file_path)
+                return file_path
         except Exception as e:
             print(e)
         finally:
