@@ -2,7 +2,7 @@
 
 run:
     echo Running the script...
-    python3.11.exe src/run.py
+    python3.11.exe run.py
 
     # Check if the script execution was successful
     if %errorlevel% neq 0 (
