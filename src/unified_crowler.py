@@ -33,6 +33,7 @@ class UnifiedCrowler:
         self.__domain_full = domain
         # self.__init_driver(allow_options)
         self.__driver = driver
+        self.__bucket: Set[Union[str, None]] = set()
         self._home_urls: Set[str] = set()
         self._current_links: Set[str] = set()
         self._link_queue = URLQueue(exclued)
@@ -121,11 +122,23 @@ class UnifiedCrowler:
             self.__driver.get(blog_url)
         else:
             self.__driver.get(self.__url+blog_url)
-        time.sleep(1)
+        # Scroll down using JavaScript
+        old_source = self.__driver.page_source
+        try:
+            for i in range(5):
+                self.__driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+                if self.__driver.page_source == old_source:
+                    break
+        except Exception as e:
+            print("128", e)
+        # Wait for a moment to let the page load
+        time.sleep(3)
         page_source = self.__driver.page_source
         page_bs = bs(page_source, "html.parser")
         a_hrefs = page_bs.find_all("a", href=True)
         urls_list: List[Union[str, None]] = [a.get('href') for a in a_hrefs if self.check_excluded(a.get("href")) and a.get('href') not in self.__home_urls]
+        self.__bucket = self.__bucket | set(urls_list)
         ingoing_urls: Set[str] = set()
         for a in urls_list:
             if not a or a.startswith("#"):
@@ -178,6 +191,7 @@ class UnifiedCrowler:
         Parameters:
             file_dir (str): The directory path for the CSV file.
         """
+
         file_dir = self.__file_dir
         try:
             # Read existing CSV file if it exists
@@ -219,7 +233,11 @@ class UnifiedCrowler:
         updated_df.to_csv(file_dir, index=False)
 
     def run(self) -> Union[bool, None]:
-        self.running = True
-        self.__get_page_main()
-        self.get_all_home_page_urls()
-        self.upped_new_outgoing_urls()
+        try:
+            self.running = True
+            self.__get_page_main()
+            self.get_all_home_page_urls()
+            self.upped_new_outgoing_urls()
+        except Exception as e:
+            print(e)
+            pass
