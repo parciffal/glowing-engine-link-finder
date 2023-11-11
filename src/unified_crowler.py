@@ -30,6 +30,7 @@ class UnifiedCrowler:
         self._config = config
         self.__url = url
         self.__domain = domain.split(".")[0]
+        self.__domain_full = domain
         # self.__init_driver(allow_options)
         self.__driver = driver
         self._home_urls: Set[str] = set()
@@ -96,7 +97,7 @@ class UnifiedCrowler:
 
     def set_linked_in(self, linked_in_url: str) -> bool:
         df = pd.read_csv(self.__file_dir)
-        target_url = self.__domain
+        target_url = self.__domain_full
         target_row = df[df['urls'] == target_url]
         if not target_row.empty:
             df.loc[df['urls'] == target_url, 'linked_in'] = linked_in_url
@@ -106,7 +107,7 @@ class UnifiedCrowler:
 
     def set_url_checked(self) -> bool:
         df = pd.read_csv(self.__file_dir)
-        target_url = self.__domain
+        target_url = self.__domain_full
         target_row = df[df['urls'] == target_url]
         if not target_row.empty:
             df.loc[df['urls'] == target_url, "checked"] = True
