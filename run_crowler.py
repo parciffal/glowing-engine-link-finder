@@ -57,12 +57,12 @@ def run_uni_crowler(file_path: str):
     exclude = list(exclude['excluded'])
     df = pd.read_csv(file_path)
     # Add new columns with initial values
-    df["linked_in"] = ""
-    df["checked"] = False
+    # df["linked_in"] = ""
+    # df["checked"] = False
 
-    # Save the DataFrame back to the CSV file
-    df.to_csv("your_data.csv", index=False)
-    breakpoint()
+    # # Save the DataFrame back to the CSV file
+    # df.to_csv("your_data.csv", index=False)
+    # breakpoint()
     # used_urls_df = pd.read_csv("./no_domains.csv")
     # # Filter new URLs that are not in the used URLs
     # filtered_df = df[~df['urls'].isin(used_urls_df['urls'])]
@@ -89,7 +89,7 @@ def run_uni_crowler(file_path: str):
 
 if __name__ == "__main__":
     # file_dir = get_latest_file()
-    file_dir = "your_data.csv"
+    file_dir = "./your_data.csv"
     if file_dir:
         run_uni_crowler(file_dir)
     else:

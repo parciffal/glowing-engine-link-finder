@@ -211,12 +211,12 @@ class UnifiedCrowler:
         # Concatenate existing and new DataFrames
         updated_df = pd.concat([existing_df, outgoing_df], ignore_index=True)
         updated_df = updated_df.drop_duplicates()
-        used_urls_df = pd.read_csv("./no_domains.csv")
+        # used_urls_df = pd.read_csv("./no_domains.csv")
         # Filter new URLs that are not in the used URLs
-        filtered_df = updated_df[~updated_df['urls'].isin(used_urls_df['urls'])]
-        print(self.__domain, f" Cleaned Links: {len(filtered_df)}")
+        # filtered_df = updated_df[~updated_df['urls'].isin(used_urls_df['urls'])]
+        # print(self.__domain, f" Cleaned Links: {len(filtered_df)}")
         # Save the updated DataFrame back to the CSV file
-        filtered_df.to_csv(file_dir, index=False)
+        updated_df.to_csv(file_dir, index=False)
 
     def run(self) -> Union[bool, None]:
         self.running = True
