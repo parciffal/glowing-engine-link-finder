@@ -6,7 +6,6 @@ news
 .download
 download.
 /collection
-/page
 /author
 /tag
 /calendar
@@ -176,3 +175,6 @@ javascript:
 medium.
 contact-us
 linkedin
+github
+gitlab
+#respond

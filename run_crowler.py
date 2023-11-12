@@ -62,11 +62,11 @@ def run_uni_crowler(file_path: str):
 
     # # Save the DataFrame back to the CSV file
     # df.to_csv("your_data.csv", index=False)
-    # breakpoint()
-    # used_urls_df = pd.read_csv("./no_domains.csv")
-    # # Filter new URLs that are not in the used URLs
-    # filtered_df = df[~df['urls'].isin(used_urls_df['urls'])]
-    # filtered_df.to_csv(file_path, index=False)
+
+    """
+    TODO
+    1) ask about excluded
+    """
     driver = __init_driver()
     for index, row in df.iterrows():
         url = row['urls']

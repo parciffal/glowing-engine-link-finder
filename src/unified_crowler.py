@@ -7,6 +7,7 @@ import requests as re
 import pandas as pd
 from urllib.parse import urlparse
 import re as rgs
+from pprint import pprint
 from datetime import datetime
 
 from src.utils.url_queue import URLQueue
@@ -42,13 +43,34 @@ class UnifiedCrowler:
         self.__file_dir = file_dir
         self.__outgoing_urls: Set[str] = set()
 
+    def get_url_http(self, url: str):
+        request = re.get(url)
+        html = request.content
+        return html
+
+    def get_url_selenium(self, url: str):
+        self.__driver.get(url)
+        time.sleep(1)
+        # Scroll down using JavaScript
+        # old_source = self.__driver.page_source
+        # try:
+        #     for i in range(5):
+        #         self.__driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        #         time.sleep(2)
+        #         if self.__driver.page_source == old_source:
+        #             break
+        # except Exception:
+        #     pass
+        time.sleep(1.5)
+        return self.__driver.page_source
+
     def __init_driver(self, allow_options: bool) -> None:
         if allow_options:
             options = self.__init_options()
             self.__driver = uc.Chrome(
                 options=options,
                 driver_executable_path=self._config.local.driver_dir,
-                # headless=True,
+                headless=True,
                 version_main=109)
         else:
             self.__driver = uc.Chrome(
@@ -116,58 +138,45 @@ class UnifiedCrowler:
             return True
         return False
 
-    def get_all_urls_from_page(self, blog_url: str, count: int = 0):
-        print(blog_url)
+    def get_all_urls_from_page(self, blog_url: str):
+        print(f"Current url: {blog_url}")
         if "https://" in blog_url or "http://" in blog_url:
-            self.__driver.get(blog_url)
+            page_source = self.get_url_selenium(blog_url)
         else:
-            self.__driver.get(self.__url+blog_url)
-        # Scroll down using JavaScript
-        old_source = self.__driver.page_source
-        try:
-            for i in range(5):
-                self.__driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1)
-                if self.__driver.page_source == old_source:
-                    break
-        except Exception as e:
-            print("128", e)
-        # Wait for a moment to let the page load
-        time.sleep(3)
+            page_source = self.get_url_selenium(self.__url + blog_url)
         page_source = self.__driver.page_source
         page_bs = bs(page_source, "html.parser")
         a_hrefs = page_bs.find_all("a", href=True)
-        urls_list: List[Union[str, None]] = [a.get('href') for a in a_hrefs if self.check_excluded(a.get("href")) and a.get('href') not in self.__home_urls]
+        urls = [a.get("href") for a in a_hrefs]
+        urls_list = [a for a in urls if a not in self.__home_urls]
         self.__bucket = self.__bucket | set(urls_list)
-        ingoing_urls: Set[str] = set()
         for a in urls_list:
-            if not a or a.startswith("#"):
-                continue
-            elif a in self.__domain or self.__domain in a or a.startswith("/"):
-                ingoing_urls.add(a)
+            if self.__domain.lower() in a.lower() or a.lower() in self.__domain.lower() or a.startswith("/"):
+                if a not in self.__home_urls:
+                    self._link_queue.add(a)
             else:
-                self.__outgoing_urls.add(a)
-        ingoing_urls = ingoing_urls.difference(self.__home_urls)
-        self._link_queue.add_from_set(ingoing_urls)
+                if not a.startswith("#"):
+                    self.__outgoing_urls.add(a)
+        print("Outgoing urls:", len(self.__outgoing_urls))
         next_link = self._link_queue.get()
         if not next_link:
             return self.set_url_checked()
-        count += 1
-        return self.get_all_urls_from_page(next_link, count)
+        return self.get_all_urls_from_page(next_link)
 
     def get_all_home_page_urls(self):
         page_source = self.__driver.page_source
         page_bs = bs(page_source, "html.parser")
         a_hrefs = page_bs.find_all("a", href=True)
-        home_urls = [a.get('href') for a in a_hrefs if self.check_excluded(a.get("href"))]
+        home_urls = [a.get('href') for a in a_hrefs]
         search_term = "blog"
         self.__home_urls = set(home_urls)
+        self.__home_urls.add(self.__driver.current_url)
         if "blog" in self.__driver.current_url:
             ingoing_urls: Set[str] = set()
             for a in self.__home_urls:
                 if not a :
                     continue
-                elif a in self.__domain or self.__domain in a or str(a).startswith("#"):
+                elif self.__domain.lower() in a.lower() or str(a).startswith("#"):
                     ingoing_urls.add(a)
             self._link_queue.add_from_set(ingoing_urls)
         blog_urls = [s for s in home_urls if search_term in s]
@@ -200,9 +209,10 @@ class UnifiedCrowler:
             # If the file doesn't exist, create an empty DataFrame
             existing_df = pd.DataFrame(columns=['urls', 'linked_in', 'checked'])
         # Create a new DataFrame for self.__outgoing_urls
-        print(self.__outgoing_urls)
+        out = [a for a in self.__outgoing_urls if not any(excluded_value in a for excluded_value in self.__excluded)]
+        print(out)
         outgoing_df = pd.DataFrame({
-            'urls': list(self.__outgoing_urls),
+            'urls': list(out),
             'linked_in': '',
             'checked': False
         })
