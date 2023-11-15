@@ -56,7 +56,7 @@ cover/
 *.pot
 
 # Selenium stuff:
-./chromedriver
+chromedriver
 
 # Django stuff:
 *.log

@@ -23,7 +23,8 @@ help.
 director.
 /download
 .download
-.dev
+.gov
+.edu
 dev/
 support.
 /support
@@ -162,7 +163,6 @@ microsoft
 cisco
 gitlab
 github
-amazone
 youtu
 coca-cola
 canon
@@ -178,3 +178,11 @@ linkedin
 github
 gitlab
 #respond
+forbes
+amazon
+docker
+reddit
+whatsapp
+viber
+goo.gl
+alibaba

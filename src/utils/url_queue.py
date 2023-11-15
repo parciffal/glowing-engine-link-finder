@@ -46,7 +46,7 @@ class URLQueue:
             str: The URL at the front of the queue.
             None: If the queue is empty or count is greater than 500.
         """
-        print(f"Queue: {len(self.urls)}", f"Count: {self.count}")
+        # print(f"Queue: {len(self.urls)}", f"Count: {self.count}")
         if self.count < 100 and self.urls:
             ret = self.urls.popleft()
             if ret not in self.used_links:
