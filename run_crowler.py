@@ -1,7 +1,6 @@
 import asyncio
-from src.unified_crowler import UnifiedCrowler
-from src.unified_crowler_async import UnifiedCrawlerAsync
-from config import config
+from src.classes.unified_crowler import UnifiedCrowler
+from src.config import config
 import time
 import pandas as pd
 import undetected_chromedriver as uc
@@ -55,9 +54,10 @@ def __init_options() -> uc.ChromeOptions:
 
 
 async def run_uni_crowler(file_path: str):
-    exclude = pd.read_csv("./excluded.csv", index_col=False)
+    exclude = pd.read_csv("data/excluded.csv", index_col=False)
     exclude = list(exclude['excluded'])
     df = pd.read_csv(file_path)
+    driver = __init_driver(True)
     for index, row in df.iterrows():
         url = row['urls']
         checked = row['checked']
@@ -65,21 +65,21 @@ async def run_uni_crowler(file_path: str):
         if not checked:
             time.sleep(1)
             try:
-                crowler = UnifiedCrawlerAsync(
+                crowler = UnifiedCrowler(
                     config=config,
                     url=f"https://{url}",
                     domain=url,
-                    excluded=exclude,
+                    driver=driver,
+                    exclued=exclude,
                     file_dir=file_path)
-                await crowler.run()
+                crowler.run()
             except Exception as e:
                 print(e)
                 continue
 
 
 if __name__ == "__main__":
-    # file_dir = get_latest_file()
-    file_dir = "./your_data.csv"
+    file_dir = "data/your_data.csv"
     if file_dir:
         asyncio.run(run_uni_crowler(file_dir))
     else:

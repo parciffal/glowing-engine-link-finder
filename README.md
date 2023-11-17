@@ -31,5 +31,5 @@ run.bat
 To install dependencies for Crowler and run it in one command use the following command in the terminal or command prompt:
 
 ```bash
-crowler.bat
+run_async.bat
 ```

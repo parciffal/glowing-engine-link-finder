@@ -1,14 +1,13 @@
-
 import asyncio
-from src.unified_crowler_async import UnifiedCrawlerAsync
-from config import config
+from src.classes.unified_crowler_async import UnifiedCrawlerAsync
+from src.config import config
 import pandas as pd
 
 MAX_CONCURRENT_TASKS = 10  # Maximum number of concurrent tasks
 
 
 async def process_links_in_batches(file_path, batch_size):
-    exclude = pd.read_csv("./excluded.csv", index_col=False)
+    exclude = pd.read_csv("data/excluded.csv", index_col=False)
     exclude = list(exclude['excluded'])
     df = pd.read_csv(file_path) 
     urls_stack = [row.get('urls') for _, row in df.iterrows() if not row.get('checked')]
@@ -38,11 +37,12 @@ async def process_links_in_batches(file_path, batch_size):
             await asyncio.gather(*tasks)
             print(f"Number of running tasks: {len(asyncio.all_tasks())}")
             tasks = []
+        print("i'm alive")
             
 
 if __name__ == "__main__":
     # file_dir = get_latest_file()
-    file_dir = "./your_data.csv"
+    file_dir = "data/your_data.csv"
     if file_dir:
         asyncio.run(process_links_in_batches(file_dir, batch_size=4))
     else:
