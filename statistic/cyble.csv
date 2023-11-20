@@ -1,0 +1,14 @@
+outgoing,ingoing,time,added
+https://nvd.nist.gov/vuln/detail/CVE-2023-4966,,0:00:07,$IP:8443
+https://www.cisa.gov/news-events/alerts/2023/10/10/citrix-releases-security-updates-multiple-products,,0:00:07,
+https://support.citrix.com/article/CTX579459/netscaler-adc-and-netscaler-gateway-security-bulletin-for-cve20234966-and-cve20234967,,0:00:07,
+https://nvd.nist.gov/vuln/detail/CVE-2023-46747,,0:00:07,
+https://$IP:8443/mgmt/tm/util/bash,,0:00:07,
+https://my.f5.com/manage/s/article/K000137353,,0:00:07,
+https://www.assetnote.io/resources/research/citrix-bleed-leaking-session-tokens-with-cve-2023-4966,,0:00:07,
+https://tomcat.apache.org/tomcat-3.3-doc/AJPv13.html#prefix-codes,,0:00:07,
+https://my.f5.com/manage/s/article/K000137365,,0:00:07,
+https://community.f5.com/t5/technical-forum/native-tmsh-bash-commands-via-rest-api/td-p/118662,,0:00:07,
+https://nvd.nist.gov/vuln/detail/CVE-2023-46748,,0:00:07,
+https://www.cisa.gov/news-events/alerts/2023/10/31/cisa-adds-two-known-exploited-vulnerabilities-catalog,,0:00:07,
+https://www.praetorian.com/blog/refresh-compromising-f5-big-ip-with-request-smuggling-cve-2023-46747/,,0:00:07,

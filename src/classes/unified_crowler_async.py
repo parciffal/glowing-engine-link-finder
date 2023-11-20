@@ -9,13 +9,16 @@ from src.utils.url_queue import URLQueue
 import asyncio
 import random
 
+
 def extract_domain(url):
     parsed_url = urlparse(url)
     return parsed_url.netloc
 
 
 class UnifiedCrawlerAsync:
-    def __init__(self, config, url, domain, excluded, file_dir="./data/cleaned_urls.csv"):
+    def __init__(
+        self, config, url, domain, excluded, file_dir="./data/cleaned_urls.csv"
+    ):
         self._config = config
         self.__url = url
         self.__domain = domain.split(".")[0] + "."
@@ -30,7 +33,8 @@ class UnifiedCrawlerAsync:
 
     async def fetch(self, session, url):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
         await asyncio.sleep(random.uniform(0, 2))
         async with session.get(url, headers=headers) as response:
             return await response.text()
@@ -51,9 +55,9 @@ class UnifiedCrawlerAsync:
     async def set_linked_in(self, linked_in_url):
         df = pd.read_csv(self.__file_dir)
         target_url = self.__domain_full
-        target_row = df[df['urls'] == target_url]
+        target_row = df[df["urls"] == target_url]
         if not target_row.empty:
-            df.loc[df['urls'] == target_url, 'linked_in'] = linked_in_url
+            df.loc[df["urls"] == target_url, "linked_in"] = linked_in_url
             df.to_csv(self.__file_dir, index=False)
             return True
         return False
@@ -61,9 +65,9 @@ class UnifiedCrawlerAsync:
     async def set_url_checked(self):
         df = pd.read_csv(self.__file_dir)
         target_url = self.__domain_full
-        target_row = df[df['urls'] == target_url]
+        target_row = df[df["urls"] == target_url]
         if not target_row.empty:
-            df.loc[df['urls'] == target_url, "checked"] = True
+            df.loc[df["urls"] == target_url, "checked"] = True
             df.to_csv(self.__file_dir, index=False)
             return True
         return False
@@ -89,7 +93,9 @@ class UnifiedCrawlerAsync:
                     else:
                         if not a.startswith("#"):
                             self.__outgoing_urls.add(a)
-                print(f"{self.__domain}: {len(self.__outgoing_urls)} loop count: {self._link_queue.count}")
+                print(
+                    f"{self.__domain}: {len(self.__outgoing_urls)} loop count: {self._link_queue.count}"
+                )
                 next_link = self._link_queue.get()
                 if not next_link:
                     return await self.set_url_checked()
@@ -111,7 +117,7 @@ class UnifiedCrawlerAsync:
 
             page_bs = bs(html, "html.parser")
             a_hrefs = page_bs.find_all("a", href=True)
-            home_urls = [a.get('href') for a in a_hrefs]
+            home_urls = [a.get("href") for a in a_hrefs]
             search_term = "blog"
             self.__home_urls = set(home_urls)
             self.__home_urls.add(self.__url)
@@ -143,12 +149,14 @@ class UnifiedCrawlerAsync:
         inr = list(ingoing) + [""] * (max_length - len(ingoing))
         add = list(added) + [""] * (max_length - len(added))
         # Create a DataFrame
-        statistic = pd.DataFrame({
-            "outgoing": out,
-            "ingoing": inr,
-            "time": [time_s] * max_length,  # Repeat 'time' to match the length
-            "added": add,
-        })
+        statistic = pd.DataFrame(
+            {
+                "outgoing": out,
+                "ingoing": inr,
+                "time": [time_s] * max_length,  # Repeat 'time' to match the length
+                "added": add,
+            }
+        )
         statistic.to_csv(f"./statistic/{domain}csv", index=False)
         stats = pd.read_csv("./data/stats.csv")
         stats.loc[len(stats)] = {
@@ -157,19 +165,23 @@ class UnifiedCrawlerAsync:
             "ingoing": len(ingoing),
             "added": len(added),
             "time": time_s,
-            "file": f"./statistic/{domain}csv"
+            "file": f"./statistic/{domain}csv",
         }
-        print(f"Domain: {self.__domain_full} Out: {len(outgoing)} In: {len(ingoing)} Time: {time_s} Added: {len(added)}")
+        print(
+            f"Domain: {self.__domain_full} Out: {len(outgoing)} In: {len(ingoing)} Time: {time_s} Added: {len(added)}"
+        )
         pprint(added)
         stats.to_csv("./data/stats.csv", index=False)
 
     async def clean_outgoing(self):
-        out = [a for a in self.__outgoing_urls if not any(excluded_value in a for excluded_value in self.__excluded)]
-        outgoing_df = pd.DataFrame({
-            'urls': list(out),
-            'linked_in': '',
-            'checked': False
-        })
+        out = [
+            a
+            for a in self.__outgoing_urls
+            if not any(excluded_value in a for excluded_value in self.__excluded)
+        ]
+        outgoing_df = pd.DataFrame(
+            {"urls": list(out), "linked_in": "", "checked": False}
+        )
 
         def remove_www(url):
             if url.startswith("www."):
@@ -177,16 +189,15 @@ class UnifiedCrawlerAsync:
             return url
 
         def clean_subdomains_from_url(url):
-            pattern = r'(?:\w+\.)?([\w-]+\.\w+)'
-            cleaned_url = rgs.sub(
-                pattern, r'\1', url)
+            pattern = r"(?:\w+\.)?([\w-]+\.\w+)"
+            cleaned_url = rgs.sub(pattern, r"\1", url)
             return cleaned_url
 
-        outgoing_df['urls'] = outgoing_df['urls'].apply(extract_domain)
-        outgoing_df['urls'] = outgoing_df['urls'].apply(remove_www)
-        outgoing_df['urls'] = outgoing_df['urls'].apply(clean_subdomains_from_url)
+        outgoing_df["urls"] = outgoing_df["urls"].apply(extract_domain)
+        outgoing_df["urls"] = outgoing_df["urls"].apply(remove_www)
+        outgoing_df["urls"] = outgoing_df["urls"].apply(clean_subdomains_from_url)
         used_urls_df = pd.read_csv("./data/no_domains.csv")
-        filtered_df = outgoing_df[~outgoing_df['urls'].isin(used_urls_df['urls'])]
+        filtered_df = outgoing_df[~outgoing_df["urls"].isin(used_urls_df["urls"])]
 
         filtered_df = filtered_df.drop_duplicates()
         return filtered_df
@@ -199,7 +210,7 @@ class UnifiedCrawlerAsync:
         try:
             existing_df = pd.read_csv(file_dir)
         except FileNotFoundError:
-            existing_df = pd.DataFrame(columns=['urls', 'linked_in', 'checked'])
+            existing_df = pd.DataFrame(columns=["urls", "linked_in", "checked"])
 
         outgoing_df = await self.clean_outgoing()
         # Concatenate existing and new DataFrames
@@ -207,16 +218,21 @@ class UnifiedCrawlerAsync:
         updated_df = pd.concat([existing_df, outgoing_df], ignore_index=True)
         updated_df = updated_df.drop_duplicates()
 
-        new_urls_df = pd.merge(outgoing_df, existing_df, on='urls', how='left', indicator=True).query(
-            '_merge == "left_only"').drop('_merge', axis=1)
-        
+        new_urls_df = (
+            pd.merge(outgoing_df, existing_df, on="urls", how="left", indicator=True)
+            .query('_merge == "left_only"')
+            .drop("_merge", axis=1)
+        )
+
         updated_df.to_csv(file_dir, index=False)
 
-        await self.add_statistic(domain=self.__domain,
-                                  outgoing=stat_out,
-                                  ingoing=stat_in,
-                                  added=new_urls_df["urls"],
-                                  time_s=time_dif)
+        await self.add_statistic(
+            domain=self.__domain,
+            outgoing=stat_out,
+            ingoing=stat_in,
+            added=new_urls_df["urls"],
+            time_s=time_dif,
+        )
 
     async def run(self):
         try:
@@ -230,4 +246,3 @@ class UnifiedCrawlerAsync:
             await self.upped_new_outgoing_urls(time_dif)
         except Exception as e:
             print(e)
-
