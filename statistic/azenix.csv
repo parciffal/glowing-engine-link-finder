@@ -1,7 +1,0 @@
-outgoing,ingoing,time,added
-https://learn.microsoft.com/en-us/azure/cosmos-db/create-alerts,,0:00:04,
-https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/tutorial-dotnet-bulk-import,,0:00:04,
-https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview#use-item-id-as-the-partition-key,,0:00:04,
-https://github.com/brendan-nobadthing/cosmos-partitions/blob/main/CosmosPartitions.Console/Data.cs,,0:00:04,
-https://github.com/brendan-nobadthing/cosmos-partitions,,0:00:04,
-https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-alert-on-logical-partition-key-storage-size,,0:00:04,
