@@ -143,35 +143,35 @@ class UnifiedCrawlerAsync:
                 print("Set checked")
                 await self.set_url_checked()
 
-    async def add_statistic(self, domain, outgoing, ingoing, time_s, added):
-        max_length = max(len(outgoing), len(ingoing), 1, len(added))
-        out = list(outgoing) + [""] * (max_length - len(outgoing))
-        inr = list(ingoing) + [""] * (max_length - len(ingoing))
-        add = list(added) + [""] * (max_length - len(added))
-        # Create a DataFrame
-        statistic = pd.DataFrame(
-            {
-                "outgoing": out,
-                "ingoing": inr,
-                "time": [time_s] * max_length,  # Repeat 'time' to match the length
-                "added": add,
-            }
-        )
-        statistic.to_csv(f"./statistic/{domain}csv", index=False)
-        stats = pd.read_csv("./data/stats.csv")
-        stats.loc[len(stats)] = {
-            "domain": self.__domain_full,
-            "outgoing": len(outgoing),
-            "ingoing": len(ingoing),
-            "added": len(added),
-            "time": time_s,
-            "file": f"./statistic/{domain}csv",
-        }
-        print(
-            f"Domain: {self.__domain_full} Out: {len(outgoing)} In: {len(ingoing)} Time: {time_s} Added: {len(added)}"
-        )
-        pprint(added)
-        stats.to_csv("./data/stats.csv", index=False)
+    # async def add_statistic(self, domain, outgoing, ingoing, time_s, added):
+    #     max_length = max(len(outgoing), len(ingoing), 1, len(added))
+    #     out = list(outgoing) + [""] * (max_length - len(outgoing))
+    #     inr = list(ingoing) + [""] * (max_length - len(ingoing))
+    #     add = list(added) + [""] * (max_length - len(added))
+    #     # Create a DataFrame
+    #     statistic = pd.DataFrame(
+    #         {
+    #             "outgoing": out,
+    #             "ingoing": inr,
+    #             "time": [time_s] * max_length,  # Repeat 'time' to match the length
+    #             "added": add,
+    #         }
+    #     )
+    #     statistic.to_csv(f"./statistic/{domain}csv", index=False)
+    #     stats = pd.read_csv("./data/stats.csv")
+    #     stats.loc[len(stats)] = {
+    #         "domain": self.__domain_full,
+    #         "outgoing": len(outgoing),
+    #         "ingoing": len(ingoing),
+    #         "added": len(added),
+    #         "time": time_s,
+    #         "file": f"./statistic/{domain}csv",
+    #     }
+    #     print(
+    #         f"Domain: {self.__domain_full} Out: {len(outgoing)} In: {len(ingoing)} Time: {time_s} Added: {len(added)}"
+    #     )
+    #     pprint(added)
+    #     stats.to_csv("./data/stats.csv", index=False)
 
     async def clean_outgoing(self):
         out = [
@@ -203,9 +203,6 @@ class UnifiedCrawlerAsync:
         return filtered_df
 
     async def upped_new_outgoing_urls(self, time_dif):
-        stat_in = self._link_queue.used_links | set(self._link_queue.urls)
-        stat_out = self.__outgoing_urls
-
         file_dir = self.__file_dir
         try:
             existing_df = pd.read_csv(file_dir)
@@ -218,21 +215,8 @@ class UnifiedCrawlerAsync:
         updated_df = pd.concat([existing_df, outgoing_df], ignore_index=True)
         updated_df = updated_df.drop_duplicates()
 
-        new_urls_df = (
-            pd.merge(outgoing_df, existing_df, on="urls", how="left", indicator=True)
-            .query('_merge == "left_only"')
-            .drop("_merge", axis=1)
-        )
-
+        # last index 32400
         updated_df.to_csv(file_dir, index=False)
-
-        await self.add_statistic(
-            domain=self.__domain,
-            outgoing=stat_out,
-            ingoing=stat_in,
-            added=new_urls_df["urls"],
-            time_s=time_dif,
-        )
 
     async def run(self):
         try:
